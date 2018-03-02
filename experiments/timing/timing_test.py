@@ -5,7 +5,7 @@ import numpy
 
 # Define some constants
 NUM_TESTS      = 1000
-TIME_INCREMENT = 0.25  # seconds
+TIME_INCREMENT = 0.50  # seconds
 
 
 # Initializations
