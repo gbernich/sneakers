@@ -15,5 +15,5 @@ NUM_PROC=${args[0]}
 for n in `seq 1 $NUM_PROC`;
 do
 	echo $n
-	python test.py $n
+	python test.py $n &
 done
