@@ -1,11 +1,12 @@
 # Usage:
 #
-# ./launch_proc.sh  <accounts CSV file>
+# ./launch_proc.sh  <site src>  <accounts CSV file>
 
 
 # Get Command line arguments
 ARGS=("$@")
-INPUT=${ARGS[0]}
+SITE=${ARGS[0]}
+ACCOUNTS=${ARGS[1]}
 
 # Save environment variable
 OLDIFS=$IFS
@@ -15,17 +16,17 @@ IFS=,
 count=0
 
 # Make sure CSV file
-[ ! -f $INPUT ] && { echo "ERROR: $INPUT file not found"; exit 99; }
+[ ! -f $ACCOUNTS ] && { echo "ERROR: $ACCOUNTS file not found"; exit 99; }
 
 # Read CSV file and spawn process for each account
 while read username password launch_time size_id
 do
 
 	# Launch python process using CSV row data
-	python test.py $count $username $password $launch_time $size_id &
+	python3 $SNEAKER_SITES/$SITE.py $username $password $launch_time $size_id &
 	((count++))
-	
-done < $INPUT
+
+done < $ACCOUNTS
 
 # Restore environment variable
 IFS=$OLDIFS
