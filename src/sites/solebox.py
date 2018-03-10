@@ -8,7 +8,9 @@ import os
 import webbrowser
 import threading
 import getpass
-  
+
+################################################################################
+
 # Define constants  
 NUM_CART_ATTEMPTS = 10
 STOCK_QUERY_DELTA = 10 # seconds
@@ -85,7 +87,7 @@ def addToCart(stoken, cnid, aid, anid, parentid, panid):
   if result != 'OK':
     # Quit if it didn't work
     return False
-    
+
 ################################################################################
 def bot():
 
@@ -217,5 +219,3 @@ s.headers.update(headers)
 
 # Start Bot
 bot()
-  
-#time.sleep(500)
