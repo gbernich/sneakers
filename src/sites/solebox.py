@@ -2,6 +2,7 @@ from __future__ import absolute_import, division, print_function
 import requests, time, random, string, os
 from bs4 import BeautifulSoup
 import time
+import datetime
 import sys
 import os
 import webbrowser
@@ -87,13 +88,19 @@ def bot(to,nb):
       tohoursec = tohour * 60 * 60
       tominsec = tomin * 60
       totalsec = tohoursec + tominsec + tosec
-    
+
       diff = totalsec - total
-  
+
+      now  = datetime.datetime.now()
+      now  = datetime.date(now.year, now.month, now.day)
+      to   = time.mktime(now.timetuple()) + totalsec
+      diff = to - time.time() + 0.001
   
       print ('Waiting ' + str(diff))
       time.sleep(diff)
+      print(datetime.datetime.now())
       print ("It's time! Starting bot...")
+
     # else continue
 
     s.headers.update({
