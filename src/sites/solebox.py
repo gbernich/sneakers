@@ -12,7 +12,8 @@ import getpass
 # Define constants  
 NUM_CART_ATTEMPTS = 10
 STOCK_QUERY_DELTA = 10 # seconds
-  
+
+################################################################################
 def login(username, password):
   print('Logging in....')
 
@@ -38,6 +39,7 @@ def login(username, password):
                      })
   return stoken
 
+################################################################################
 def isInStock(link, aid):
   # Parse webpage 
   pageSource  = s.get(link)
@@ -51,6 +53,7 @@ def isInStock(link, aid):
     print("In Stock")
     return True
 
+################################################################################
 def addToCart(stoken, cnid, aid, anid, parentid, panid):
   result       = None
   attemptCount = 0
@@ -82,7 +85,8 @@ def addToCart(stoken, cnid, aid, anid, parentid, panid):
   if result != 'OK':
     # Quit if it didn't work
     return False
-
+    
+################################################################################
 def bot():
 
     # Get input args
