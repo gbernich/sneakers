@@ -13,7 +13,32 @@ import getpass
 NUM_CART_ATTEMPTS = 10
 STOCK_QUERY_DELTA = 10 # seconds
   
-def isInStock(s, link, aid):
+def login(username, password):
+  print('Logging in....')
+
+  # Get token
+  r = s.get('https://www.solebox.com/en/my-account/')
+  stoken = BeautifulSoup(r.text, "html.parser").find('input', {'name': 'stoken'}).get('value')
+  s.headers.update({
+              'Origin': 'https://www.solebox.com',
+              'Referer': 'https://www.solebox.com/en/my-account/',
+          })
+
+  # Login
+  r = s.post("https://www.solebox.com/index.php?lang=1&",
+                     data={
+                         'stoken': stoken, 
+                         'lang': '1',  
+                         'cl':'user',
+                         'actcontrol':'user',
+                         'fnc': 'login_noredirect',
+                         'lgn_usr': username,
+                         'lgn_pwd': password
+
+                     })
+  return stoken
+
+def isInStock(link, aid):
   # Parse webpage 
   pageSource  = s.get(link)
   isAvailable = BeautifulSoup(pageSource.text, "html.parser").find('a', {'id': aid}).parent.get('class')
@@ -26,7 +51,7 @@ def isInStock(s, link, aid):
     print("In Stock")
     return True
 
-def addToCart(s, stoken, cnid, aid, anid, parentid, panid):
+def addToCart(stoken, cnid, aid, anid, parentid, panid):
   result       = None
   attemptCount = 0
 
@@ -56,49 +81,20 @@ def addToCart(s, stoken, cnid, aid, anid, parentid, panid):
 
   if result != 'OK':
     # Quit if it didn't work
-    #print ("ERROR: Failed to add to cart after", NUM_CART_ATTEMPTS, "attempts")
     return False
 
 def bot():
-    headers = {
-                'GBer-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/56.0.2924.87 Safari/537.36',
-                'Accept-Encoding': 'gzip, deflate, sdch, br',
-                'Accept-Language': 'en-GB,en;q=0.8',
-                'Upgrade-Insecure-Requests': '1'
-            }
 
     # Get input args
     mode     = sys.argv[5]
     link     = sys.argv[6]
     aid      = int(sys.argv[4])
-    login    = sys.argv[1]
+    username = sys.argv[1]
     password = sys.argv[2]
     timeout  = sys.argv[3]
   
-    # Start a web session
-    s = requests.Session()
-    s.cookies.clear()
-    s.headers.update(headers)
-    print('Logging in....')
-    r = s.get('https://www.solebox.com/en/my-account/')
-    stoken = BeautifulSoup(r.text, "html.parser").find('input', {'name': 'stoken'}).get('value')
-    s.headers.update({
-                'Origin': 'https://www.solebox.com',
-                'Referer': 'https://www.solebox.com/en/my-account/',
-            })
-  
     # Login
-    r = s.post("https://www.solebox.com/index.php?lang=1&",
-                       data={
-                           'stoken': stoken, 
-                           'lang': '1',  
-                           'cl':'user',
-                           'actcontrol':'user',
-                           'fnc': 'login_noredirect',
-                           'lgn_usr': login,
-                           'lgn_pwd': password
-  
-                       })
+    stoken = login(username, password)
 
     # Parse webpage 
     r = s.get(link)
@@ -129,20 +125,21 @@ def bot():
       # Calculate difference between release time and current time
       diff = releaseTime['absolute'] - time.time() + 0.001
   
+      # Set the web URL to the sneakers
+      s.headers.update({
+                  'Origin': 'https://www.solebox.com',
+                  'Referer': link,
+              })
+
       # Sleep until the shoes release
-      print ('Sleeping for ' + str(diff))
+      print ('Sleeping for ' + str(diff) + ' seconds')
       time.sleep(diff)
       print ("Started bot at " + str(datetime.datetime.now()))
 
-    # Set the web URL to the sneakers
-    s.headers.update({
-                'Origin': 'https://www.solebox.com',
-                'Referer': link,
-            })
 
     # Attempt to cart sneakers in release mode (makes 10 attempts)
     if mode == 'release':
-      result = addToCart(s, stoken, cnid, aid, anid, parentid, panid)
+      result = addToCart(stoken, cnid, aid, anid, parentid, panid)
       if result == False:
         print ("ERROR: Failed to add to cart after several attempts")
         return
@@ -150,10 +147,10 @@ def bot():
     # Attempt to cart sneakers in restock mode (checks if shoe is available every so often)
     elif mode == 'restock':
       result = None
-      while isInStock(s, link, aid) == False:
+      while isInStock(link, aid) == False:
         time.sleep(STOCK_QUERY_DELTA)
 
-      result = addToCart(s, stoken, cnid, aid, anid, parentid, panid)
+      result = addToCart(stoken, cnid, aid, anid, parentid, panid)
       if result == False:
         print ("ERROR: Failed to add to cart after several attempts")
         return
@@ -163,25 +160,24 @@ def bot():
       print ("ERROR: Invalid mode. Must be release or restock.")
 
     # If the script ever makes it here, we carted
-    # successfully. So, go to the cart and checkout
-    r = s.get('https://www.solebox.com/en/cart/')
+    # successfully. So, go to the cart
+
+    # This doesn't seem necessary
+    # r = s.get('https://www.solebox.com/en/cart/')
+    # s.headers.update({
+    #             'Origin': 'https://www.solebox.com',
+    #             'Referer': 'https://www.solebox.com/en/cart/',
+    #         })
+    # r = s.post("https://www.solebox.com/index.php?lang=1&",
+    #                    data={
+    #                        'stoken': stoken, 
+    #                        'lang': '1',  
+    #                        'cl':'user'
+    #                    })
+    # r = s.get('https://www.solebox.com/index.php?cl=payment&lang=1')
   
-    s.headers.update({
-                'Origin': 'https://www.solebox.com',
-                'Referer': 'https://www.solebox.com/en/cart/',
-            })
-  
-    r = s.post("https://www.solebox.com/index.php?lang=1&",
-                       data={
-                           'stoken': stoken, 
-                           'lang': '1',  
-                           'cl':'user'
-  
-                       })
+    # Checkout
     print ('Checking out...')
-  
-    r = s.get('https://www.solebox.com/index.php?cl=payment&lang=1')
-  
     r = s.post("https://www.solebox.com/index.php?lang=1&",
                        data={
                            'stoken': stoken, 
@@ -198,7 +194,24 @@ def bot():
     print ("If your browser hasen't opened, paste this link:")
     print (r.url)
 
+################################################################################
+#    SCRIPT STARTS HERE!
+################################################################################
+
+# Open session
+headers = {
+            'GBer-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/56.0.2924.87 Safari/537.36',
+            'Accept-Encoding': 'gzip, deflate, sdch, br',
+            'Accept-Language': 'en-GB,en;q=0.8',
+            'Upgrade-Insecure-Requests': '1'
+        }
+
+# Start a web session
+s = requests.Session()
+s.cookies.clear()
+s.headers.update(headers)
+
 # Start Bot
 bot()
   
-time.sleep(500)
+#time.sleep(500)
