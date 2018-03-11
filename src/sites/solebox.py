@@ -104,7 +104,7 @@ def addToCart(stoken, cnid, aid, anid, parentid, panid):
                      })
     if 'successfully' in r.text:
       result = 'OK'
-      print('Added to cart!')
+      print('Added ' + aid + ' to cart!')
       return True
     else:
       attemptCount += 1
