@@ -13,7 +13,7 @@ import getpass
 
 # Define constants  
 NUM_CART_ATTEMPTS = 10
-STOCK_QUERY_DELTA = 10 # seconds
+STOCK_QUERY_DELTA =  5 # seconds
 
 ################################################################################
 def login(username, password):
@@ -56,6 +56,32 @@ def isInStock(link, aid):
     return True
 
 ################################################################################
+def getSizeIDs(link):
+  sizeIDs = []
+
+  # Parse webpage 
+  pageSource  = s.get(link)
+  sizeList = BeautifulSoup(pageSource.text, "html.parser").findAll('a', {'class': 'selectSize'})
+  
+  for item in sizeList:
+    sizeIDs.append(item.get('id'))
+
+  return sizeIDs
+
+def sizesInStock(link, allSizes):
+  inStockList = []
+
+  # Parse webpage 
+  pageSource  = s.get(link)
+
+  for sizeID in allSizes:
+    isAvailable = BeautifulSoup(pageSource.text, "html.parser").find('a', {'id': sizeID}).parent.get('class')
+    if "inactive" not in isAvailable:
+      inStockList.append(sizeID)
+
+  return inStockList
+
+################################################################################
 def addToCart(stoken, cnid, aid, anid, parentid, panid):
   result       = None
   attemptCount = 0
@@ -94,11 +120,14 @@ def bot():
     # Get input args
     mode     = sys.argv[5]
     link     = sys.argv[6]
-    aid      = int(sys.argv[4])
+    aid      = sys.argv[4]
     username = sys.argv[1]
     password = sys.argv[2]
     timeout  = sys.argv[3]
   
+    getSizeIDs(link)
+
+
     # Login
     stoken = login(username, password)
 
@@ -152,11 +181,22 @@ def bot():
 
     # Attempt to cart sneakers in restock mode (checks if shoe is available every so often)
     elif mode == 'restock':
-      result = None
-      while isInStock(link, aid) == False:
-        time.sleep(STOCK_QUERY_DELTA)
+      allSizes = getSizeIDs(link)
 
-      result = addToCart(stoken, cnid, aid, anid, parentid, panid)
+      result = None
+      inStockList = sizesInStock(link, allSizes)
+      while len(inStockList) == 0:
+        time.sleep(STOCK_QUERY_DELTA)
+        inStockList = sizesInStock(link, allSizes)
+
+      # If our size is available, cart it
+      if aid in inStockList:
+        result = addToCart(stoken, cnid, aid, anid, parentid, panid)
+
+      # Otherwise, cart any other size
+      else:
+        result = addToCart(stoken, cnid, inStockList[0], anid, parentid, panid)
+
       if result == False:
         print ("ERROR: Failed to add to cart after several attempts")
         return
