@@ -12,8 +12,9 @@ import getpass
 ################################################################################
 
 # Define constants  
-NUM_CART_ATTEMPTS = 10
-STOCK_QUERY_DELTA =  5 # seconds
+NUM_CART_ATTEMPTS    = 10
+STOCK_QUERY_DELTA    =  0 # seconds
+STOCK_QUERY_ATTEMPTS = 15 # number attempts before logging in again
 
 ################################################################################
 def login(username, password):
@@ -184,8 +185,20 @@ def bot():
       allSizes = getSizeIDs(link)
 
       result = None
+      attempts = 0
+
       inStockList = sizesInStock(link, allSizes)
       while len(inStockList) == 0:
+        print("No sizes in stock")
+
+        # Maintain attempts counter
+        attempts += 1
+        if attempts == STOCK_QUERY_ATTEMPTS:
+          stoken   = login(username, password)
+          print(stoken)
+          attempts = 0
+
+        # Sleep and then try again
         time.sleep(STOCK_QUERY_DELTA)
         inStockList = sizesInStock(link, allSizes)
 
