@@ -145,7 +145,10 @@ def bot():
       cnid     = sys.argv[8]
       anid     = sys.argv[9]
       parentid = sys.argv[10]
-      panid    = sys.argv[11]
+      if sys.argc > 11:
+        panid    = sys.argv[11]
+      else:
+        panid    = ""
 
     # Decide when to attempt to cart
     if timeout != "now":
