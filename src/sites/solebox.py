@@ -132,13 +132,20 @@ def bot():
     # Login
     stoken = login(username, password)
 
-    # Parse webpage 
-    r = s.get(link)
-    stoken   = BeautifulSoup(r.text, "html.parser").find('input', {'name': 'stoken'}).get('value')
-    cnid     = BeautifulSoup(r.text, "html.parser").find('input', {'name': 'cnid'}).get('value')
-    anid     = BeautifulSoup(r.text, "html.parser").find('input', {'name': 'anid'}).get('value')
-    parentid = BeautifulSoup(r.text, "html.parser").find('input', {'name': 'parentid'}).get('value')
-    panid    = BeautifulSoup(r.text, "html.parser").find('input', {'name': 'panid'}).get('value')
+    if mode != "queue":
+      # Parse webpage 
+      r = s.get(link)
+      stoken   = BeautifulSoup(r.text, "html.parser").find('input', {'name': 'stoken'}).get('value')
+      cnid     = BeautifulSoup(r.text, "html.parser").find('input', {'name': 'cnid'}).get('value')
+      anid     = BeautifulSoup(r.text, "html.parser").find('input', {'name': 'anid'}).get('value')
+      parentid = BeautifulSoup(r.text, "html.parser").find('input', {'name': 'parentid'}).get('value')
+      panid    = BeautifulSoup(r.text, "html.parser").find('input', {'name': 'panid'}).get('value')
+    else:
+      stoken   = sys.argv[7]
+      cnid     = sys.argv[8]
+      anid     = sys.argv[9]
+      parentid = sys.argv[10]
+      panid    = sys.argv[11]
 
     # Decide when to attempt to cart
     if timeout != "now":
@@ -162,10 +169,10 @@ def bot():
       diff = releaseTime['absolute'] - time.time() + 0.001
   
       # Set the web URL to the sneakers
-      s.headers.update({
-                  'Origin': 'https://www.solebox.com',
-                  'Referer': link,
-              })
+      #s.headers.update({
+      #            'Origin': 'https://www.solebox.com',
+      #            'Referer': link,
+      #        })
 
       # Sleep until the shoes release
       print ('Sleeping for ' + str(diff) + ' seconds')
