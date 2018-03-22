@@ -46,8 +46,13 @@ def login(username, password):
 def isInStock(link, aid):
   # Parse webpage 
   pageSource  = s.get(link)
-  isAvailable = BeautifulSoup(pageSource.text, "html.parser").find('a', {'id': aid}).parent.get('class')
-  
+  try:
+    isAvailable = BeautifulSoup(pageSource.text, "html.parser").find('a', {'id': aid}).parent.get('class')
+  except Exception as e:
+    saveHTML("debug_isInStock.html", pageSource.text)
+    print("ERROR: See debug_isInStock.html. Exiting.")
+    sys.exit()
+
   # Get the availability of the shoe
   if "inactive" in isAvailable:
     print("Out of Stock")
@@ -62,8 +67,13 @@ def getSizeIDs(link):
 
   # Parse webpage 
   pageSource  = s.get(link)
-  sizeList = BeautifulSoup(pageSource.text, "html.parser").findAll('a', {'class': 'selectSize'})
-  
+  try:
+    sizeList = BeautifulSoup(pageSource.text, "html.parser").findAll('a', {'class': 'selectSize'})
+  except Exception as e:
+    saveHTML("debug_getSizeIDs.html", pageSource.text)
+    print("ERROR: See debug_getSizeIDs.html. Exiting.")
+    sys.exit()
+
   for item in sizeList:
     sizeIDs.append(item.get('id'))
 
@@ -76,7 +86,13 @@ def sizesInStock(link, allSizes):
   pageSource  = s.get(link)
 
   for sizeID in allSizes:
-    isAvailable = BeautifulSoup(pageSource.text, "html.parser").find('a', {'id': sizeID}).parent.get('class')
+    try:
+      isAvailable = BeautifulSoup(pageSource.text, "html.parser").find('a', {'id': sizeID}).parent.get('class')
+    except Exception as e:
+      saveHTML("debug_sizesInStock.html", pageSource.text)
+      print("ERROR: See debug_sizesInStock.html. Exiting.")
+      sys.exit()
+
     if "inactive" not in isAvailable:
       inStockList.append(sizeID)
 
@@ -109,11 +125,18 @@ def addToCart(stoken, cnid, aid, anid, parentid, panid):
       return True
     else:
       attemptCount += 1
-      print('Error adding to cart, trying again...')
+      print('Error adding to cart, trying again. See debug_addToCart.html for details.')
+      saveHTML("debug_addToCart.html", r.text)
 
   if result != 'OK':
     # Quit if it didn't work
     return False
+
+################################################################################
+def saveHTML(fn, html):
+  fp = open(fn, 'w')
+  fp.write(html)
+  fp.close()
 
 ################################################################################
 def bot():
@@ -135,11 +158,42 @@ def bot():
     if mode != "queue":
       # Parse webpage 
       r = s.get(link)
-      stoken   = BeautifulSoup(r.text, "html.parser").find('input', {'name': 'stoken'}).get('value')
-      cnid     = BeautifulSoup(r.text, "html.parser").find('input', {'name': 'cnid'}).get('value')
-      anid     = BeautifulSoup(r.text, "html.parser").find('input', {'name': 'anid'}).get('value')
-      parentid = BeautifulSoup(r.text, "html.parser").find('input', {'name': 'parentid'}).get('value')
-      panid    = BeautifulSoup(r.text, "html.parser").find('input', {'name': 'panid'}).get('value')
+
+      try:
+        stoken   = BeautifulSoup(r.text, "html.parser").find('input', {'name': 'stoken'}).get('value')
+      except Exception as e:
+        saveHTML("debug_stoken.html", r.text)
+        print("ERROR: See debug_stoken.html. Continueing with empty stoken.")
+        stoken = ""
+
+      try:
+        cnid     = BeautifulSoup(r.text, "html.parser").find('input', {'name': 'cnid'}).get('value')
+      except Exception as e:
+        saveHTML("debug_cnid.html", r.text)
+        print("ERROR: See debug_cnid.html. Continueing with empty cnid.")
+        cnid = ""
+
+      try:
+        anid     = BeautifulSoup(r.text, "html.parser").find('input', {'name': 'anid'}).get('value')
+      except Exception as e:
+        saveHTML("debug_anid.html", r.text)
+        print("ERROR: See debug_anid.html. Continueing with empty anid.")
+        anid = ""
+
+      try:
+        parentid = BeautifulSoup(r.text, "html.parser").find('input', {'name': 'parentid'}).get('value')
+      except Exception as e:
+        saveHTML("debug_parentid.html", r.text)
+        print("ERROR: See debug_parentid.html. Continueing with empty parentid.")
+        parentid = ""
+
+      try:
+        panid    = BeautifulSoup(r.text, "html.parser").find('input', {'name': 'panid'}).get('value')
+      except Exception as e:
+        saveHTML("debug_panid.html", r.text)
+        print("ERROR: See debug_panid.html. Continueing with empty panid.")
+        panid = ""
+
     else:
       stoken   = sys.argv[7]
       cnid     = sys.argv[8]
